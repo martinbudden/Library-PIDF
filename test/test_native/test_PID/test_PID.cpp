@@ -21,6 +21,7 @@ void test_PID_init() {
     TEST_ASSERT_EQUAL_FLOAT(error.D, 0.0);
 }
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 void test_PID() {
     PIDF pid(PIDF::PIDF_t { 5.0, 3.0, 1.0, 0.0 });
 
@@ -169,6 +170,7 @@ void test_PI_Controller() {
     TEST_ASSERT_EQUAL_FLOAT(error.P + error.I, output);
     TEST_ASSERT_EQUAL_FLOAT(1.5, output);
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
