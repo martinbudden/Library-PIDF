@@ -44,9 +44,9 @@ float PIDF::updateDelta(float measurement, float measurementDelta, float deltaT)
         // If so, the excess value above saturation does not help convergence to the setpoint and will result in overshoot when the P value eventually comes down.
         // So limit the integral to a value that avoids saturation.
         if (pfSum + _errorIntegral > _outputSaturationValue) {
-            _errorIntegral = std::max(_outputSaturationValue - pfSum, 0.0F);
+            _errorIntegral = std::fmax(_outputSaturationValue - pfSum, 0.0F);
         } else if (pfSum  + _errorIntegral < -_outputSaturationValue) {
-            _errorIntegral = std::min(-_outputSaturationValue - pfSum, 0.0F);
+            _errorIntegral = std::fmin(-_outputSaturationValue - pfSum, 0.0F);
         }
     }
 
