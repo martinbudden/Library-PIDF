@@ -4,10 +4,15 @@
     "keywords": "PID PIDF feedforward feed forward control",
     "authors": {
         "name": "Martin Budden",
+        "url": "https://github.com/martinbudden"
+    },
+    "repository": {
+        "type": "git",
         "url": "https://github.com/martinbudden/Library-PIDF.git"
     },
     "license": "MIT",
     "version": "0.0.1",
     "frameworks": "*",
-    "platforms": "*"
+    "platforms": "*",
+    "headers": "PIDF.h"
 }
