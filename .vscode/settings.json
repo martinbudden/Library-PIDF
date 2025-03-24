@@ -10,8 +10,25 @@
         "hicpp",
         "libc",
         "llvmlibc",
+        "noreturn",
         "PIDF",
         "setpoint",
-        "suppr"
+        "suppr",
+        "Wattributes",
+        "Wcast",
+        "Wdisabled",
+        "Wdouble",
+        "Werror",
+        "Wextra",
+        "Wfloat",
+        "Wimplicit",
+        "Winline",
+        "Wmissing",
+        "Wnarrowing",
+        "Wpacked",
+        "Wpadded",
+        "Wshadow",
+        "Wsign",
+        "Wtrampolines"
     ]
 }
