@@ -14,7 +14,7 @@ public:
         float D;
     };
 public:
-    inline PIDF() : _pid {0.0, 0.0, 0.0, 0.0} {}
+    inline PIDF() : _pid {0.0F, 0.0F, 0.0F, 0.0F} {}
     explicit inline PIDF(const PIDF_t& pid) : _pid {pid.kp, pid.ki, pid.kd, pid.kf} {}
 public:
     inline void setP(float p) { _pid.kp = p; }
@@ -46,12 +46,12 @@ private:
     static float clip(float value, float min, float max) { return value < min ? min : value > max ? max : value; }
 private:
     PIDF_t _pid;
-    float _setpoint {0.0};
-    float _errorDerivative {0.0}; // stored for instrumentation and telemetry
-    float _errorIntegral {0.0};
-    float _errorPrevious {0.0};
-    float _measurementPrevious {0.0};
-    float _integralMax {0.0};
-    float _integralThreshold {0.0}; //!< Threshold for PID integration. Can be set to avoid integral wind-up due to movement in motor's backlash zone.
-    float _outputSaturationValue {0.0};
+    float _setpoint {0.0F};
+    float _errorDerivative {0.0F}; // stored for instrumentation and telemetry
+    float _errorIntegral {0.0F};
+    float _errorPrevious {0.0F};
+    float _measurementPrevious {0.0F};
+    float _integralMax {0.0F};
+    float _integralThreshold {0.0F}; //!< Threshold for PID integration. Can be set to avoid integral wind-up due to movement in motor's backlash zone.
+    float _outputSaturationValue {0.0F};
 };
