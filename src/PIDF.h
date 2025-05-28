@@ -36,6 +36,8 @@ public:
     inline void setSetpoint(float setpoint) { _setpoint = setpoint; }
     inline float getSetpoint() const { return _setpoint; }
 
+    inline float getPreviousMeasurement() const { return _measurementPrevious; } //!< get previous measurement, useful for DTerm filtering
+
     inline float update(float measurement, float deltaT) { return updateDelta(measurement, measurement - _measurementPrevious, deltaT); }
     float updateDelta(float measurement, float measurementDelta, float deltaT);
 
