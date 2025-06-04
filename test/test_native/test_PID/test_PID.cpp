@@ -173,6 +173,78 @@ void test_PI_Controller()
     TEST_ASSERT_EQUAL_FLOAT(1.5F, output);
 }
 
+void test_integration_on_off()
+{
+    PIDF pid(PIDF::PIDF_t { 0.2F, 0.3F, 0.0F, 0.0F });
+    const float deltaT {1};
+
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getSetpoint());
+
+    float output = pid.update(0.0F, deltaT);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, output);
+    PIDF::error_t error = pid.getError();
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.I);
+
+    output = pid.update(2.0F, deltaT);
+    error = pid.getError();
+    TEST_ASSERT_EQUAL_FLOAT(-0.4F, error.P);
+    TEST_ASSERT_EQUAL_FLOAT(-0.3F, error.I);
+    TEST_ASSERT_EQUAL_FLOAT(error.P + error.I, output);
+    TEST_ASSERT_EQUAL_FLOAT(-0.7F, output);
+
+    output = pid.update(2.0F, deltaT);
+    error = pid.getError();
+    TEST_ASSERT_EQUAL_FLOAT(-0.4F, error.P);
+    TEST_ASSERT_EQUAL_FLOAT(-0.9F, error.I);
+    TEST_ASSERT_EQUAL_FLOAT(-1.3F, output);
+
+    // Integration OFF
+    pid.switchIntegrationOff();
+    error = pid.getError();
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.I);
+
+    output = pid.update(0.0F, deltaT);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, output);
+    error = pid.getError();
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.I);
+
+    output = pid.update(2.0F, deltaT);
+    error = pid.getError();
+    TEST_ASSERT_EQUAL_FLOAT(-0.4F, error.P);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.I);
+    TEST_ASSERT_EQUAL_FLOAT(error.P + error.I, output);
+    TEST_ASSERT_EQUAL_FLOAT(-0.4F, output);
+
+    output = pid.update(2.0F, deltaT);
+    error = pid.getError();
+    TEST_ASSERT_EQUAL_FLOAT(-0.4F, error.P);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.I);
+    TEST_ASSERT_EQUAL_FLOAT(-0.4F, output);
+
+    // Integration back ON
+    pid.switchIntegrationOn();
+    error = pid.getError();
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.I);
+
+    output = pid.update(0.0F, deltaT);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, output);
+    error = pid.getError();
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.I);
+
+    output = pid.update(2.0F, deltaT);
+    error = pid.getError();
+    TEST_ASSERT_EQUAL_FLOAT(-0.4F, error.P);
+    TEST_ASSERT_EQUAL_FLOAT(-0.3F, error.I);
+    TEST_ASSERT_EQUAL_FLOAT(error.P + error.I, output);
+    TEST_ASSERT_EQUAL_FLOAT(-0.7F, output);
+
+    output = pid.update(2.0F, deltaT);
+    error = pid.getError();
+    TEST_ASSERT_EQUAL_FLOAT(-0.4F, error.P);
+    TEST_ASSERT_EQUAL_FLOAT(-0.9F, error.I);
+    TEST_ASSERT_EQUAL_FLOAT(-1.3F, output);
+}
+
 void test_integral_max()
 {
     PIDF pid(PIDF::PIDF_t { 0.2F, 0.3F, 0.0F, 0.0F });
@@ -341,6 +413,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
     RUN_TEST(test_PID);
     RUN_TEST(test_P_Controller);
     RUN_TEST(test_PI_Controller);
+    RUN_TEST(test_integration_on_off);
     RUN_TEST(test_integral_max);
     RUN_TEST(test_integral_saturation_positive);
     RUN_TEST(test_integral_saturation_negative);
