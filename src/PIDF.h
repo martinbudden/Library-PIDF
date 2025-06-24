@@ -12,6 +12,7 @@ public:
         float P;
         float I;
         float D;
+        float F;
     };
 public:
     explicit inline PIDF(const PIDF_t& pid) : _pid {pid.kp, pid.ki, pid.kd, pid.kf}, _kiSaved(pid.ki)  {}

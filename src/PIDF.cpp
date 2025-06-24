@@ -7,7 +7,8 @@ PIDF::error_t PIDF::getError() const
     return error_t {
         .P = _errorPrevious*_pid.kp,
         .I = _errorIntegral, // _erroIntegral is already multiplied by _pid.ki
-        .D = _errorDerivative*_pid.kd
+        .D = _errorDerivative*_pid.kd,
+        .F = _setpoint*_pid.kf
     };
 }
 
@@ -16,7 +17,8 @@ PIDF::error_t PIDF::getErrorRaw() const
     return error_t {
         .P = _errorPrevious,
         .I = (_pid.ki == 0.0F) ? 0.0F : _errorIntegral / _pid.ki,
-        .D = _errorDerivative
+        .D = _errorDerivative,
+        .F = _setpoint
     };
 }
 
