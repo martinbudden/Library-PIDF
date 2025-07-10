@@ -29,6 +29,8 @@
         "Wpadded",
         "Wshadow",
         "Wsign",
-        "Wtrampolines"
+        "Wstrict",
+        "Wtrampolines",
+        "Wunused"
     ]
 }

@@ -13,22 +13,26 @@ void test_PID_init() {
     TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getI());
     TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getD());
     TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getF());
+    TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getS());
     TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getSetpoint());
 
     const PIDF::error_t error = pid.getError();
     TEST_ASSERT_EQUAL_FLOAT(error.P, 0.0);
     TEST_ASSERT_EQUAL_FLOAT(error.I, 0.0);
     TEST_ASSERT_EQUAL_FLOAT(error.D, 0.0);
+    TEST_ASSERT_EQUAL_FLOAT(error.F, 0.0);
+    TEST_ASSERT_EQUAL_FLOAT(error.S, 0.0);
 }
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 void test_PID() {
-    PIDF pid(PIDF::PIDF_t { 5.0F, 3.0F, 1.0F, 0.0F });
+    PIDF pid(PIDF::PIDF_t { 5.0F, 3.0F, 1.0F, 0.0F, 0.0F });
 
     TEST_ASSERT_EQUAL_FLOAT(5.0F, pid.getP());
     TEST_ASSERT_EQUAL_FLOAT(3.0F, pid.getI());
     TEST_ASSERT_EQUAL_FLOAT(1.0F, pid.getD());
     TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getF());
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getS());
     TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getSetpoint());
 
     const float deltaT {0.01F};
@@ -45,13 +49,14 @@ void test_PID() {
 
 void test_P_Controller()
 {
-    PIDF pid(PIDF::PIDF_t { 1.0, 0.0, 0.0, 0.0 });
+    PIDF pid(PIDF::PIDF_t { 1.0, 0.0, 0.0, 0.0, 0.0F });
     const float deltaT {1};
 
     TEST_ASSERT_EQUAL_FLOAT(1.0, pid.getP());
     TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getI());
     TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getD());
     TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getF());
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getS());
     TEST_ASSERT_EQUAL_FLOAT(0.0, pid.getSetpoint());
 
     float output = pid.update(0, deltaT);
@@ -59,6 +64,8 @@ void test_P_Controller()
     TEST_ASSERT_EQUAL_FLOAT(0, error.P);
     TEST_ASSERT_EQUAL_FLOAT(0, error.I);
     TEST_ASSERT_EQUAL_FLOAT(0, error.D);
+    TEST_ASSERT_EQUAL_FLOAT(0, error.F);
+    TEST_ASSERT_EQUAL_FLOAT(0, error.S);
     TEST_ASSERT_EQUAL_FLOAT(error.P + error.I + error.D, output);
 
     pid.setSetpoint(5.0);
@@ -106,13 +113,14 @@ void test_P_Controller()
 
 void test_PI_Controller()
 {
-    PIDF pid(PIDF::PIDF_t { 0.3F, 0.2F, 0.0F, 0.0F });
+    PIDF pid(PIDF::PIDF_t { 0.3F, 0.2F, 0.0F, 0.0F, 0.0F });
     const float deltaT {1};
 
     TEST_ASSERT_EQUAL_FLOAT(0.3F, pid.getP());
     TEST_ASSERT_EQUAL_FLOAT(0.2F, pid.getI());
     TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getD());
     TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getF());
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getS());
     TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getSetpoint());
 
     float output = pid.update(0, deltaT);
@@ -120,6 +128,8 @@ void test_PI_Controller()
     TEST_ASSERT_EQUAL_FLOAT(0.0F, error.P);
     TEST_ASSERT_EQUAL_FLOAT(0.0F, error.I);
     TEST_ASSERT_EQUAL_FLOAT(0.0F, error.D);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.F);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.S);
     TEST_ASSERT_EQUAL_FLOAT(error.P + error.I + error.D, output);
 
     pid.setSetpoint(5.0F);
@@ -128,6 +138,8 @@ void test_PI_Controller()
     TEST_ASSERT_EQUAL_FLOAT(1.5F, error.P);
     TEST_ASSERT_EQUAL_FLOAT(0.5F, error.I);
     TEST_ASSERT_EQUAL_FLOAT(error.P + error.I, output);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.F);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.S);
     TEST_ASSERT_EQUAL_FLOAT(2.0F, output);
 
     output = pid.update(1.0F, deltaT);
@@ -135,6 +147,8 @@ void test_PI_Controller()
     TEST_ASSERT_EQUAL_FLOAT(1.2F, error.P);
     TEST_ASSERT_EQUAL_FLOAT(1.4F, error.I);
     TEST_ASSERT_EQUAL_FLOAT(error.P + error.I, output);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.F);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.S);
     TEST_ASSERT_EQUAL_FLOAT(2.6F, output);
 
     output = pid.update(4.0F, deltaT);
@@ -142,6 +156,8 @@ void test_PI_Controller()
     TEST_ASSERT_EQUAL_FLOAT(0.3F, error.P);
     TEST_ASSERT_EQUAL_FLOAT(1.9F, error.I);
     TEST_ASSERT_EQUAL_FLOAT(error.P + error.I, output);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.F);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.S);
     TEST_ASSERT_EQUAL_FLOAT(2.2F, output);
 
     output = pid.update(7.0F, deltaT);
@@ -149,6 +165,8 @@ void test_PI_Controller()
     TEST_ASSERT_EQUAL_FLOAT(-0.6F, error.P);
     TEST_ASSERT_EQUAL_FLOAT(1.8F, error.I);
     TEST_ASSERT_EQUAL_FLOAT(error.P + error.I, output);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.F);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.S);
     TEST_ASSERT_EQUAL_FLOAT(1.2F, output);
 
     output = pid.update(6.0F, deltaT);
@@ -156,6 +174,8 @@ void test_PI_Controller()
     TEST_ASSERT_EQUAL_FLOAT(-0.3F, error.P);
     TEST_ASSERT_EQUAL_FLOAT(1.5F, error.I);
     TEST_ASSERT_EQUAL_FLOAT(error.P + error.I, output);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.F);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.S);
     TEST_ASSERT_EQUAL_FLOAT(1.2F, output);
 
     output = pid.update(5.0F, deltaT);
@@ -163,6 +183,8 @@ void test_PI_Controller()
     TEST_ASSERT_EQUAL_FLOAT(0.0F, error.P);
     TEST_ASSERT_EQUAL_FLOAT(1.5F, error.I);
     TEST_ASSERT_EQUAL_FLOAT(error.P + error.I, output);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.F);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.S);
     TEST_ASSERT_EQUAL_FLOAT(1.5F, output);
 
     output = pid.update(5.0F, deltaT);
@@ -170,12 +192,14 @@ void test_PI_Controller()
     TEST_ASSERT_EQUAL_FLOAT(0.0F, error.P);
     TEST_ASSERT_EQUAL_FLOAT(1.5F, error.I);
     TEST_ASSERT_EQUAL_FLOAT(error.P + error.I, output);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.F);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.S);
     TEST_ASSERT_EQUAL_FLOAT(1.5F, output);
 }
 
 void test_integration_on_off()
 {
-    PIDF pid(PIDF::PIDF_t { 0.2F, 0.3F, 0.0F, 0.0F });
+    PIDF pid(PIDF::PIDF_t { 0.2F, 0.3F, 0.0F, 0.0F, 0.0F });
     const float deltaT {1};
 
     TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getSetpoint());
@@ -247,7 +271,7 @@ void test_integration_on_off()
 
 void test_integral_max()
 {
-    PIDF pid(PIDF::PIDF_t { 0.2F, 0.3F, 0.0F, 0.0F });
+    PIDF pid(PIDF::PIDF_t { 0.2F, 0.3F, 0.0F, 0.0F, 0.0F });
     pid.setIntegralMax(2.0F);
     const float deltaT {1};
 
@@ -292,7 +316,7 @@ void test_integral_max()
 
 void test_integral_saturation_positive()
 {
-    PIDF pid(PIDF::PIDF_t { 0.2F, 0.3F, 0.0F, 0.0F });
+    PIDF pid(PIDF::PIDF_t { 0.2F, 0.3F, 0.0F, 0.0F, 0.0F });
     pid.setOutputSaturationValue(1.5F);
     const float deltaT {1};
 
@@ -367,7 +391,7 @@ void test_integral_saturation_positive()
 
 void test_integral_saturation_negative()
 {
-    PIDF pid(PIDF::PIDF_t { 0.2F, 0.3F, 0.0F, 0.0F });
+    PIDF pid(PIDF::PIDF_t { 0.2F, 0.3F, 0.0F, 0.0F, 0.0F });
     pid.setOutputSaturationValue(1.5F);
     const float deltaT {1};
 
