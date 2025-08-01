@@ -39,6 +39,8 @@ public:
     inline void switchIntegrationOn() { _pid.ki = _kiSaved; _errorIntegral = 0.0F; }
 
     inline void setIntegralMax(float integralMax) { _integralMax = integralMax; }
+    inline void setIntegralMin(float integralMin) { _integralMin = integralMin; }
+    inline void setIntegralLimit(float integralLimit) { _integralMax = integralLimit; _integralMin = -integralLimit; }
     inline void setIntegralThreshold(float integralThreshold) { _integralThreshold = integralThreshold; }
     inline void setOutputSaturationValue(float outputSaturationValue) { _outputSaturationValue = outputSaturationValue; }
 
@@ -67,7 +69,8 @@ public:
     // accessor functions to obtain error values for instrumentation
     error_t getError() const;
     error_t getErrorRaw() const;
-private:
+
+    inline float getPreviousError() const { return _errorPrevious; } //!< get previous error, for test code
     static float clip(float value, float min, float max) { return value < min ? min : value > max ? max : value; }
 private:
     PIDF_t _pid;
@@ -79,7 +82,8 @@ private:
     float _errorIntegral {0.0F};
     float _errorPrevious {0.0F};
     float _measurementPrevious {0.0F};
-    float _integralMax {0.0F};
+    float _integralMax {0.0F}; //!< Integral windup limit for positive integral
+    float _integralMin {0.0F}; //!< Integral windup limit for negative integral
     float _integralThreshold {0.0F}; //!< Threshold for PID integration. Can be set to avoid integral wind-up due to movement in motor's backlash zone.
     float _outputSaturationValue {0.0F};
 };
