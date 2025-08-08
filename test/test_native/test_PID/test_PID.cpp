@@ -286,6 +286,19 @@ void test_integration_on_off()
     TEST_ASSERT_EQUAL_FLOAT(-2.0F, pid.getPreviousError());
     TEST_ASSERT_EQUAL_FLOAT(-1.2F, error.I); // -0.6 + (-2.0 - 2.0) * 0.3 / 2
     TEST_ASSERT_EQUAL_FLOAT(-1.6F, output);
+
+    pid.resetAll();
+    error = pid.getError();
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getSetpoint());
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getPreviousSetpoint());
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getSetpointDelta());
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getPreviousError());
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, pid.getPreviousMeasurement());
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.P);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.I);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.D);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.F);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, error.S);
 }
 
 void test_integral_limit()

@@ -71,6 +71,7 @@ public:
     error_t getErrorRaw() const;
 
     inline float getPreviousError() const { return _errorPrevious; } //!< get previous error, for test code
+    void resetAll(); //!< reset all, for test code
     static float clip(float value, float min, float max) { return value < min ? min : value > max ? max : value; }
 private:
     PIDF_t _pid;

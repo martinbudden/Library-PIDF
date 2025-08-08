@@ -24,6 +24,17 @@ PIDF::error_t PIDF::getErrorRaw() const
     };
 }
 
+void PIDF::resetAll()
+{
+    _setpoint = 0.0F;
+    _setpointPrevious = 0.0F;
+    _setpointDerivative = 0.0F;
+    _errorDerivative = 0.0F;
+    _errorIntegral = 0.0F;
+    _errorPrevious = 0.0F;
+    _measurementPrevious = 0.0F;
+}
+
 /*!
 Calculate PID output using the provided measurementRate.
 This allows the measurementRate to be filtered before the PID update is called.
