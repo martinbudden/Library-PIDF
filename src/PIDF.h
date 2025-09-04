@@ -65,6 +65,7 @@ public:
         return updateDelta(measurement, measurement - _measurementPrevious, setpointDelta, deltaT);
     }
     float updateDelta(float measurement, float measurementDelta, float setpointDelta, float deltaT);
+    float updatePI(float measurement, float deltaT); //!< Optimized update of P and I terms only, for PI controller
 
     // accessor functions to obtain error values for instrumentation
     error_t getError() const;
@@ -76,15 +77,18 @@ public:
 private:
     PIDF_t _pid;
     float _kiSaved; //!< saved value of _pid.ki, so integration can be switched on and off
+    float _measurementPrevious {0.0F};
+
     float _setpoint {0.0F};
     float _setpointPrevious {0.0F};
     float _setpointDerivative {0.0F};
+
     float _errorDerivative {0.0F}; // stored for instrumentation and telemetry
     float _errorIntegral {0.0F};
     float _errorPrevious {0.0F};
-    float _measurementPrevious {0.0F};
+
     float _integralMax {0.0F}; //!< Integral windup limit for positive integral
     float _integralMin {0.0F}; //!< Integral windup limit for negative integral
     float _integralThreshold {0.0F}; //!< Threshold for PID integration. Can be set to avoid integral wind-up due to movement in motor's backlash zone.
-    float _outputSaturationValue {0.0F};
+    float _outputSaturationValue {0.0F}; //!< For integral windup control
 };
