@@ -70,6 +70,16 @@ public:
     // accessor functions to obtain error values for instrumentation
     error_t getError() const;
     error_t getErrorRaw() const;
+    float getErrorP() const { return _errorPrevious*_pid.kp; }
+    float getErrorI() const { return _errorIntegral; } // _erroIntegral is already multiplied by _pid.ki
+    float getErrorD() const { return _errorDerivative*_pid.kd; }
+    float getErrorF() const { return _setpointDerivative*_pid.kf; }
+    float getErrorS() const { return _setpoint*_pid.ks; }
+    float getErrorRawP() const { return _errorPrevious; }
+    float getErrorRawI() const { return (_pid.ki == 0.0F) ? 0.0F : _errorIntegral / _pid.ki; }
+    float getErrorRawD() const { return _errorDerivative; }
+    float getErrorRawF() const { return _setpointDerivative; }
+    float getErrorRawS() const { return _setpoint; }
 
     inline float getPreviousError() const { return _errorPrevious; } //!< get previous error, for test code
     void resetAll(); //!< reset all, for test code
