@@ -3,21 +3,24 @@
 # PID Library
 
 This library contains a [PID controller](https://en.wikipedia.org/wiki/Proportional-integral-derivative_controller) with
-additional [feed forward](https://en.wikipedia.org/wiki/Feed_forward_(control)).
+additional [feed forward](https://en.wikipedia.org/wiki/Feed_forward_(control)) and setpoint components.
 
 The PID controller has the following features:
 
-1. Addition of optional feed forward component. The PID calculation pseudocode is:<br>
-   `output = kp*error + ki*errorIntegral + kd*errorDerivative + kf*setpoint`<br>
-   Setting `kf` to zero gives a traditional PID controller.
+1. Addition of optional feed forward and setpoint components. The PID calculation pseudocode is:<br>
+   `output = kp*error + ki*errorIntegral + kd*errorDerivative + kf*setpointDerivative + ks*setpoint`<br>
+   Setting `kf` and `ks` to zero gives a traditional PID controller.
 2. Calculation of derivative on measurement, avoiding "derivative kick" when the setpoint changes.
-3. Two forms of the update function `update` and `updateDelta` with a `measurementDelta` parameter. Providing this parameter
-   allows filtering `measurementDelta` before the PID calculation.
-4. _delta-t_ input parameter to PID `update` function. This allows for jitter in the timing of the call to the `update` function.
-5. A choice of two methods of controlling integral windup. Either the integral term can be limited to a maximum value,
+3. _delta-t_ input parameter to PID `update` function. This allows for jitter in the timing of the call to the `update` function.
+4. A choice of two methods of controlling integral windup. Either the integral term can be limited to a maximum value,
    or it can be set to zero when the output saturates. Both methods can be used together, if desired.
-6. Ability to switch integration off. Useful, for example, for a vehicle that has its motors turned on, but has not yet started moving.
-7. Functions to return the current error terms. These can be used for PID tuning, telemetry, and test code.
+5. Additional update function, `updateDelta`, with a `measurementDelta` parameter. Providing this parameter
+   allows filtering of `measurementDelta` before the PID calculation.
+6. Support for dynamic PID control, where the PID constants are changed at runtime, in particular:
+    1. Ability to switch integration off. Useful, for example, for a vehicle that has its motors turned on, but has not yet started moving.
+    2. Additional update function `updateDeltaITerm`, with a `iTermError` parameter. This allows the user to calculate the ITerm
+       error. This can be used, for example, to implement ITerm relaxation.
+    3. Functions to return the current error terms. (These can also be used for PID tuning, telemetry, and test)
 
 The PID controller deliberately does not implement these features:
 

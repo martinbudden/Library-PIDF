@@ -45,6 +45,13 @@ public:
     inline void setOutputSaturationValue(float outputSaturationValue) { _outputSaturationValue = outputSaturationValue; }
 
     inline void setSetpoint(float setpoint) { _setpointPrevious = _setpoint; _setpoint = setpoint; }
+    inline void setSetpoint(float setpoint, float deltaT) {
+        _setpointPrevious = _setpoint;
+        _setpoint = setpoint;
+        _setpointDerivative = (_setpoint - _setpointPrevious)/deltaT;
+    }
+    inline void setSetpointDerivative(float setpointDerivative) { _setpointDerivative = setpointDerivative; }
+
     inline float getSetpoint() const { return _setpoint; }
     inline float getPreviousSetpoint() const { return _setpointPrevious; }
     inline float getSetpointDelta() const { return _setpoint - _setpointPrevious; }
@@ -54,36 +61,35 @@ public:
     inline float update(float measurement, float deltaT) {
         return updateDelta(measurement, measurement - _measurementPrevious, deltaT);
     }
-    inline float update(float measurement, float setpoint, float deltaT) {
-        setSetpoint(setpoint);
-        return updateDelta(measurement, measurement - _measurementPrevious, getSetpointDelta(), deltaT);
-    }
     inline float updateDelta(float measurement, float measurementDelta, float deltaT) {
-        return updateDelta(measurement, measurementDelta, 0.0F, deltaT);
+        return updateDeltaITerm(measurement, measurementDelta, _setpoint - measurement, deltaT);
     }
-    inline float updateDeltaSetpoint(float measurement, float setpointDelta, float deltaT) {
-        return updateDelta(measurement, measurement - _measurementPrevious, setpointDelta, deltaT);
-    }
-    float updateDelta(float measurement, float measurementDelta, float setpointDelta, float deltaT);
-    float updatePI(float measurement, float deltaT); //!< Optimized update of P and I terms only, for PI controller
 
-    // accessor functions to obtain error values for instrumentation
+    float updateDeltaITerm(float measurement, float measurementDelta, float iTermError, float deltaT);
+
+    float updatePS(float measurement);
+    float updatePIS(float measurement, float deltaT);
+    float updatePDS(float measurement, float measurementDelta, float deltaT);
+
+    // accessor functions to obtain error values
     error_t getError() const;
     error_t getErrorRaw() const;
-    float getErrorP() const { return _errorPrevious*_pid.kp; }
-    float getErrorI() const { return _errorIntegral; } // _erroIntegral is already multiplied by _pid.ki
-    float getErrorD() const { return _errorDerivative*_pid.kd; }
-    float getErrorF() const { return _setpointDerivative*_pid.kf; }
-    float getErrorS() const { return _setpoint*_pid.ks; }
-    float getErrorRawP() const { return _errorPrevious; }
-    float getErrorRawI() const { return (_pid.ki == 0.0F) ? 0.0F : _errorIntegral / _pid.ki; }
-    float getErrorRawD() const { return _errorDerivative; }
-    float getErrorRawF() const { return _setpointDerivative; }
-    float getErrorRawS() const { return _setpoint; }
+    inline float getErrorP() const { return _errorPrevious*_pid.kp; }
+    inline float getErrorI() const { return _errorIntegral; } // _erroIntegral is already multiplied by _pid.ki
+    inline float getErrorD() const { return _errorDerivative*_pid.kd; }
+    inline float getErrorF() const { return _setpointDerivative*_pid.kf; }
+    inline float getErrorS() const { return _setpoint*_pid.ks; }
+
+    inline float getErrorRawP() const { return _errorPrevious; }
+    inline float getErrorRawI() const { return (_pid.ki == 0.0F) ? 0.0F : _errorIntegral / _pid.ki; }
+    inline float getErrorRawD() const { return _errorDerivative; }
+    inline float getErrorRawF() const { return _setpointDerivative; }
+    inline float getErrorRawS() const { return _setpoint; }
 
     inline float getPreviousError() const { return _errorPrevious; } //!< get previous error, for test code
+
     void resetAll(); //!< reset all, for test code
-    static float clip(float value, float min, float max) { return value < min ? min : value > max ? max : value; }
+    static inline float clip(float value, float min, float max) { return value < min ? min : value > max ? max : value; }
 private:
     PIDF_t _pid;
     float _kiSaved; //!< saved value of _pid.ki, so integration can be switched on and off

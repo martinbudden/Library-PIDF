@@ -39,7 +39,7 @@ void PIDF::resetAll()
 Calculate PID output using the provided measurementRate.
 This allows the measurementRate to be filtered before the PID update is called.
 */
-float PIDF::updateDelta(float measurement, float measurementDelta, float setpointDelta, float deltaT) // NOLINT(bugprone-easily-swappable-parameters)
+float PIDF::updateDeltaITerm(float measurement, float measurementDelta, float iTermError, float deltaT) // NOLINT(bugprone-easily-swappable-parameters)
 {
     _measurementPrevious = measurement;
     const float error = _setpoint - measurement;
@@ -48,7 +48,7 @@ float PIDF::updateDelta(float measurement, float measurementDelta, float setpoin
     if (_integralThreshold == 0.0F || fabsf(error) >= _integralThreshold) {
         // "integrate" the error
         //_errorIntegral += _pid.ki*_error*deltaT; // Euler integration
-        _errorIntegral += _pid.ki*0.5F*(error + _errorPrevious)*deltaT; // integration using trapezoid rule
+        _errorIntegral += _pid.ki*0.5F*(iTermError + _errorPrevious)*deltaT; // integration using trapezoid rule
         // Anti-windup via integral clamping
         if (_integralMax > 0.0F && _errorIntegral > _integralMax) {
             _errorIntegral = _integralMax;
@@ -72,16 +72,34 @@ float PIDF::updateDelta(float measurement, float measurementDelta, float setpoin
     }
 
     _errorDerivative = -measurementDelta / deltaT; // note minus sign, error delta has reverse polarity to measurement delta
-    _setpointDerivative = setpointDelta / deltaT;
 
-    // The PID calculation with additional setpoint(openloop) and feedforward(setpoint derivative) terms
+    // The PID calculation with additional S setpoint(openloop) and F feedforward(setpoint derivative) terms
     //                   P + S + I              +  D                       + F
     const float output = psSum + _errorIntegral + _pid.kd*_errorDerivative + _pid.kf*_setpointDerivative;
 
     return output;
 }
 
-float PIDF::updatePI(float measurement, float deltaT) // NOLINT(bugprone-easily-swappable-parameters)
+/*
+Optimized update of P and S terms only, for P controller
+*/
+float PIDF::updatePS(float measurement) // NOLINT(bugprone-easily-swappable-parameters)
+{
+    _measurementPrevious = measurement;
+    const float error = _setpoint - measurement;
+    _errorPrevious = error;
+
+    // The P (no I, no D) calculation with additional S setpoint(openloop) term
+    //                   P             + S
+    const float output = _pid.kp*error + _pid.ks*_setpoint;
+
+    return output;
+}
+
+/*
+Optimized update of P, I, and S terms only, for PI controller
+*/
+float PIDF::updatePIS(float measurement, float deltaT) // NOLINT(bugprone-easily-swappable-parameters)
 {
     _measurementPrevious = measurement;
     const float error = _setpoint - measurement;
@@ -113,9 +131,28 @@ float PIDF::updatePI(float measurement, float deltaT) // NOLINT(bugprone-easily-
         }
     }
 
-    // The PI (no D) calculation with additional setpoint(openloop) term
+    // The PI (no D) calculation with additional S setpoint(openloop) term
     //                   P + S + I
     const float output = psSum + _errorIntegral;
+
+    return output;
+}
+
+/*
+Optimized update of P, D, and S terms only, for PD controller
+*/
+float PIDF::updatePDS(float measurement, float measurementDelta, float deltaT) // NOLINT(bugprone-easily-swappable-parameters)
+{
+    _measurementPrevious = measurement;
+    const float error = _setpoint - measurement;
+
+    _errorPrevious = error;
+
+    _errorDerivative = -measurementDelta / deltaT; // note minus sign, error delta has reverse polarity to measurement delta
+
+    // The PD (no I) calculation with additional S setpoint(openloop) term
+    //                   P             + S                 + D
+    const float output = _pid.kp*error + _pid.ks*_setpoint + _pid.kd*_errorDerivative;
 
     return output;
 }
