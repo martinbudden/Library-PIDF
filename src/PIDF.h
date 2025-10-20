@@ -1,13 +1,20 @@
 # pragma once
 
+/*!
+PID controller with additional open loop control.
+
+Uses "independent PID" notation where the gains are denoted as kp, ki, kd etc.
+
+(In the "dependent PID" notation Kc, tauI, and tauD parameters are used, where kp = Kc, ki = Kc/tauI, kd = Kc*tauD)
+*/
 class PIDF {
 public:
     struct PIDF_t {
-        float kp; // proportional
-        float ki; // integral
-        float kd; // derivative
-        float kf; // feed forward, applies to setpointDelta
-        float ks; // setpoint
+        float kp; // proportional gain
+        float ki; // integral gain
+        float kd; // derivative gain
+        float kf; // setpoint derivative gain
+        float ks; // setpoint gain
     };
     struct error_t {
         float P;
@@ -34,7 +41,6 @@ public:
     inline const PIDF_t getPID() const { return PIDF_t { _pid.kp, _kiSaved, _pid.kd, _pid.kf, _pid.ks }; }  // returns the set value of ki, whether integration is turned on or not
 
     inline void resetIntegral() { _errorIntegral = 0.0F; }
-    //! switch off integration, to avoid integral windup
     inline void switchIntegrationOff() { _kiSaved = _pid.ki; _pid.ki = 0.0F; _errorIntegral = 0.0F; }
     inline void switchIntegrationOn() { _pid.ki = _kiSaved; _errorIntegral = 0.0F; }
 
@@ -99,10 +105,11 @@ private:
     float _setpointPrevious {0.0F};
     float _setpointDerivative {0.0F};
 
-    float _errorDerivative {0.0F}; // stored for instrumentation and telemetry
+    float _errorDerivative {0.0F};
     float _errorIntegral {0.0F};
     float _errorPrevious {0.0F};
 
+    // integral anti-windup parameters
     float _integralMax {0.0F}; //!< Integral windup limit for positive integral
     float _integralMin {0.0F}; //!< Integral windup limit for negative integral
     float _integralThreshold {0.0F}; //!< Threshold for PID integration. Can be set to avoid integral wind-up due to movement in motor's backlash zone.

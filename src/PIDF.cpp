@@ -43,11 +43,15 @@ float PIDF::updateDeltaITerm(float measurement, float measurementDelta, float iT
 {
     _measurementPrevious = measurement;
     const float error = _setpoint - measurement;
-    const float psSum = _pid.kp*error + _pid.ks*_setpoint;
+    _errorDerivative = -measurementDelta / deltaT; // note minus sign, error delta has reverse polarity to measurement delta
+    // Partial PID sum, excludes ITerm
+    // has additional S setpoint(openloop) and F feedforward(setpoint derivative) terms
+    //                       P             +  D                       + S                 + F (no ITerm)
+    const float partialSum = _pid.kp*error + _pid.kd*_errorDerivative + _pid.ks*_setpoint + _pid.kf*_setpointDerivative;
 
     if (_integralThreshold == 0.0F || fabsf(error) >= _integralThreshold) {
         // "integrate" the error
-        //_errorIntegral += _pid.ki*_error*deltaT; // Euler integration
+        //_errorIntegral += _pid.ki*iTermError*deltaT; // Euler integration
         _errorIntegral += _pid.ki*0.5F*(iTermError + _errorPrevious)*deltaT; // integration using trapezoid rule
         // Anti-windup via integral clamping
         if (_integralMax > 0.0F && _errorIntegral > _integralMax) {
@@ -60,22 +64,21 @@ float PIDF::updateDeltaITerm(float measurement, float measurementDelta, float iT
 
     if (_outputSaturationValue > 0.0F) {
         // Anti-windup by avoiding output saturation.
-        // Check if the P + S + I saturates the output
+        // Check if partialSum + _errorIntegral saturates the output
         // If so, the excess value above saturation does not help convergence to the setpoint and will result in
         // overshoot when the P value eventually comes down.
-        // So limit the integral to a value that avoids saturation.
-        if (psSum + _errorIntegral > _outputSaturationValue) {
-            _errorIntegral = std::fmax(_outputSaturationValue - psSum, 0.0F);
-        } else if (psSum  + _errorIntegral < -_outputSaturationValue) {
-            _errorIntegral = std::fmin(-_outputSaturationValue - psSum, 0.0F);
+        // So limit the _errorIntegral to a value that avoids output saturation.
+        if (_errorIntegral > _outputSaturationValue - partialSum) {
+            _errorIntegral = std::fmax(_outputSaturationValue - partialSum, 0.0F);
+        } else if (_errorIntegral < -_outputSaturationValue - partialSum) {
+            _errorIntegral = std::fmin(-_outputSaturationValue - partialSum, 0.0F);
         }
     }
 
-    _errorDerivative = -measurementDelta / deltaT; // note minus sign, error delta has reverse polarity to measurement delta
 
     // The PID calculation with additional S setpoint(openloop) and F feedforward(setpoint derivative) terms
-    //                   P + S + I              +  D                       + F
-    const float output = psSum + _errorIntegral + _pid.kd*_errorDerivative + _pid.kf*_setpointDerivative;
+    //                   P+D+S+F    +  I
+    const float output = partialSum + _errorIntegral;
 
     return output;
 }
@@ -103,11 +106,11 @@ float PIDF::updatePIS(float measurement, float deltaT) // NOLINT(bugprone-easily
 {
     _measurementPrevious = measurement;
     const float error = _setpoint - measurement;
-    const float psSum = _pid.kp*error + _pid.ks*_setpoint;
+    const float partialSum = _pid.kp*error + _pid.ks*_setpoint;
 
     if (_integralThreshold == 0.0F || fabsf(error) >= _integralThreshold) {
         // "integrate" the error
-        //_errorIntegral += _pid.ki*_error*deltaT; // Euler integration
+        //_errorIntegral += _pid.ki*error*deltaT; // Euler integration
         _errorIntegral += _pid.ki*0.5F*(error + _errorPrevious)*deltaT; // integration using trapezoid rule
         // Anti-windup via integral clamping
         if (_integralMax > 0.0F && _errorIntegral > _integralMax) {
@@ -120,20 +123,20 @@ float PIDF::updatePIS(float measurement, float deltaT) // NOLINT(bugprone-easily
 
     if (_outputSaturationValue > 0.0F) {
         // Anti-windup by avoiding output saturation.
-        // Check if the P + S + I saturates the output
+        // Check if partialSum + _errorIntegral saturates the output
         // If so, the excess value above saturation does not help convergence to the setpoint and will result in
         // overshoot when the P value eventually comes down.
-        // So limit the integral to a value that avoids saturation.
-        if (psSum + _errorIntegral > _outputSaturationValue) {
-            _errorIntegral = std::fmax(_outputSaturationValue - psSum, 0.0F);
-        } else if (psSum  + _errorIntegral < -_outputSaturationValue) {
-            _errorIntegral = std::fmin(-_outputSaturationValue - psSum, 0.0F);
+        // So limit the _errorIntegral to a value that avoids output saturation.
+        if (_errorIntegral > _outputSaturationValue - partialSum) {
+            _errorIntegral = std::fmax(_outputSaturationValue - partialSum, 0.0F);
+        } else if (_errorIntegral < -_outputSaturationValue - partialSum) {
+            _errorIntegral = std::fmin(-_outputSaturationValue - partialSum, 0.0F);
         }
     }
 
     // The PI (no D) calculation with additional S setpoint(openloop) term
-    //                   P + S + I
-    const float output = psSum + _errorIntegral;
+    //                   P + S      +  I
+    const float output = partialSum + _errorIntegral;
 
     return output;
 }
@@ -151,8 +154,8 @@ float PIDF::updatePDS(float measurement, float measurementDelta, float deltaT) /
     _errorDerivative = -measurementDelta / deltaT; // note minus sign, error delta has reverse polarity to measurement delta
 
     // The PD (no I) calculation with additional S setpoint(openloop) term
-    //                   P             + S                 + D
-    const float output = _pid.kp*error + _pid.ks*_setpoint + _pid.kd*_errorDerivative;
+    //                   P             + D                        + S
+    const float output = _pid.kp*error + _pid.kd*_errorDerivative + _pid.ks*_setpoint;
 
     return output;
 }
