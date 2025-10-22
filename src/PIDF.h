@@ -1,9 +1,9 @@
 # pragma once
 
 /*!
-PID controller with additional open loop control.
+PID controller with Feedforward (open loop) control.
 
-Uses "independent PID" notation where the gains are denoted as kp, ki, kd etc.
+Uses "independent PID" notation, where the gains are denoted as kp, ki, kd etc.
 
 (In the "dependent PID" notation Kc, tauI, and tauD parameters are used, where kp = Kc, ki = Kc/tauI, kd = Kc*tauD)
 */
@@ -13,32 +13,32 @@ public:
         float kp; // proportional gain
         float ki; // integral gain
         float kd; // derivative gain
-        float kf; // setpoint derivative gain
         float ks; // setpoint gain
+        float kk; // setpoint derivative gain ('kick')
     };
     struct error_t {
         float P;
         float I;
         float D;
-        float F;
         float S;
+        float K;
     };
 public:
-    explicit inline PIDF(const PIDF_t& pid) : _pid {pid.kp, pid.ki, pid.kd, pid.kf, pid.ks}, _kiSaved(pid.ki)  {}
+    explicit inline PIDF(const PIDF_t& pid) : _pid {pid.kp, pid.ki, pid.kd, pid.ks, pid.kk}, _kiSaved(pid.ki)  {}
     inline PIDF() : PIDF({0.0F, 0.0F, 0.0F, 0.0F, 0.0F}) {}
 public:
     inline void setP(float p) { _pid.kp = p; }
     inline void setI(float i) { _pid.ki = i; _kiSaved = _pid.ki; }
     inline void setD(float d) { _pid.kd = d; }
-    inline void setF(float f) { _pid.kf = f; }
     inline void setS(float s) { _pid.ks = s; }
+    inline void setK(float k) { _pid.kk = k; }
     inline void setPID(const PIDF_t& pid) { _pid = pid; _kiSaved = _pid.ki; }
     inline float getP() const { return _pid.kp; }
     inline float getI() const { return _kiSaved; } // returns the set value of ki, whether integration is turned on or not
     inline float getD() const { return _pid.kd; }
-    inline float getF() const { return _pid.kf; }
     inline float getS() const { return _pid.ks; }
-    inline const PIDF_t getPID() const { return PIDF_t { _pid.kp, _kiSaved, _pid.kd, _pid.kf, _pid.ks }; }  // returns the set value of ki, whether integration is turned on or not
+    inline float getK() const { return _pid.kk; }
+    inline const PIDF_t getPID() const { return PIDF_t { _pid.kp, _kiSaved, _pid.kd, _pid.ks, _pid.kk }; }  // returns the set value of ki, whether integration is turned on or not
 
     inline void resetIntegral() { _errorIntegral = 0.0F; }
     inline void switchIntegrationOff() { _kiSaved = _pid.ki; _pid.ki = 0.0F; _errorIntegral = 0.0F; }
@@ -73,9 +73,9 @@ public:
 
     float updateDeltaITerm(float measurement, float measurementDelta, float iTermError, float deltaT);
 
-    float updatePS(float measurement);
-    float updatePIS(float measurement, float deltaT);
-    float updatePDS(float measurement, float measurementDelta, float deltaT);
+    float updateSP(float measurement);
+    float updateSPI(float measurement, float deltaT);
+    float updateSPD(float measurement, float measurementDelta, float deltaT);
 
     // accessor functions to obtain error values
     error_t getError() const;
@@ -83,14 +83,14 @@ public:
     inline float getErrorP() const { return _errorPrevious*_pid.kp; }
     inline float getErrorI() const { return _errorIntegral; } // _erroIntegral is already multiplied by _pid.ki
     inline float getErrorD() const { return _errorDerivative*_pid.kd; }
-    inline float getErrorF() const { return _setpointDerivative*_pid.kf; }
     inline float getErrorS() const { return _setpoint*_pid.ks; }
+    inline float getErrorK() const { return _setpointDerivative*_pid.kk; }
 
     inline float getErrorRawP() const { return _errorPrevious; }
     inline float getErrorRawI() const { return (_pid.ki == 0.0F) ? 0.0F : _errorIntegral / _pid.ki; }
     inline float getErrorRawD() const { return _errorDerivative; }
-    inline float getErrorRawF() const { return _setpointDerivative; }
     inline float getErrorRawS() const { return _setpoint; }
+    inline float getErrorRawK() const { return _setpointDerivative; }
 
     inline float getPreviousError() const { return _errorPrevious; } //!< get previous error, for test code
 

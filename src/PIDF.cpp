@@ -8,8 +8,8 @@ PIDF::error_t PIDF::getError() const
         .P = _errorPrevious*_pid.kp,
         .I = _errorIntegral, // _erroIntegral is already multiplied by _pid.ki
         .D = _errorDerivative*_pid.kd,
-        .F = _setpointDerivative*_pid.kf,
-        .S = _setpoint*_pid.ks
+        .S = _setpoint*_pid.ks,
+        .K = _setpointDerivative*_pid.kk
     };
 }
 
@@ -19,8 +19,8 @@ PIDF::error_t PIDF::getErrorRaw() const
         .P = _errorPrevious,
         .I = (_pid.ki == 0.0F) ? 0.0F : _errorIntegral / _pid.ki,
         .D = _errorDerivative,
-        .F = _setpointDerivative,
-        .S = _setpoint
+        .S = _setpoint,
+        .K = _setpointDerivative
     };
 }
 
@@ -46,8 +46,8 @@ float PIDF::updateDeltaITerm(float measurement, float measurementDelta, float iT
     _errorDerivative = -measurementDelta / deltaT; // note minus sign, error delta has reverse polarity to measurement delta
     // Partial PID sum, excludes ITerm
     // has additional S setpoint(openloop) and F feedforward(setpoint derivative) terms
-    //                       P             +  D                       + S                 + F (no ITerm)
-    const float partialSum = _pid.kp*error + _pid.kd*_errorDerivative + _pid.ks*_setpoint + _pid.kf*_setpointDerivative;
+    //                       P             +  D                       + S                 + K (no ITerm)
+    const float partialSum = _pid.kp*error + _pid.kd*_errorDerivative + _pid.ks*_setpoint + _pid.kk*_setpointDerivative;
 
     if (_integralThreshold == 0.0F || fabsf(error) >= _integralThreshold) {
         // "integrate" the error
@@ -84,9 +84,9 @@ float PIDF::updateDeltaITerm(float measurement, float measurementDelta, float iT
 }
 
 /*
-Optimized update of P and S terms only, for P controller
+Optimized update of S and P terms only (P controller).
 */
-float PIDF::updatePS(float measurement) // NOLINT(bugprone-easily-swappable-parameters)
+float PIDF::updateSP(float measurement) // NOLINT(bugprone-easily-swappable-parameters)
 {
     _measurementPrevious = measurement;
     const float error = _setpoint - measurement;
@@ -100,9 +100,9 @@ float PIDF::updatePS(float measurement) // NOLINT(bugprone-easily-swappable-para
 }
 
 /*
-Optimized update of P, I, and S terms only, for PI controller
+Optimized update of S, P, and I terms only (PI controller)
 */
-float PIDF::updatePIS(float measurement, float deltaT) // NOLINT(bugprone-easily-swappable-parameters)
+float PIDF::updateSPI(float measurement, float deltaT) // NOLINT(bugprone-easily-swappable-parameters)
 {
     _measurementPrevious = measurement;
     const float error = _setpoint - measurement;
@@ -142,9 +142,9 @@ float PIDF::updatePIS(float measurement, float deltaT) // NOLINT(bugprone-easily
 }
 
 /*
-Optimized update of P, D, and S terms only, for PD controller
+Optimized update of S, P, and D terms only (PD controller).
 */
-float PIDF::updatePDS(float measurement, float measurementDelta, float deltaT) // NOLINT(bugprone-easily-swappable-parameters)
+float PIDF::updateSPD(float measurement, float measurementDelta, float deltaT) // NOLINT(bugprone-easily-swappable-parameters)
 {
     _measurementPrevious = measurement;
     const float error = _setpoint - measurement;
