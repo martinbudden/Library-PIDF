@@ -13,6 +13,8 @@
         "noreturn",
         "PIDF",
         "setpoint",
+        "SKPD",
+        "SKPI",
         "suppr",
         "Wattributes",
         "Wcast",

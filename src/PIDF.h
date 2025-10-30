@@ -74,8 +74,12 @@ public:
     float updateDeltaITerm(float measurement, float measurementDelta, float iTermError, float deltaT);
 
     float updateSP(float measurement);
+
     float updateSPI(float measurement, float deltaT);
+    float updateSKPI(float measurement, float deltaT) { return updateSPI(measurement, deltaT) + _pid.kk*_setpointDerivative; }
+
     float updateSPD(float measurement, float measurementDelta, float deltaT);
+    float updateSKPD(float measurement, float measurementDelta, float deltaT) { return updateSPD(measurement, measurementDelta, deltaT) + _pid.kk*_setpointDerivative; }
 
     // accessor functions to obtain error values
     error_t getError() const;
