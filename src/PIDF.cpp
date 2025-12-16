@@ -36,8 +36,9 @@ void PIDF::resetAll()
 }
 
 /*!
-Calculate PID output using the provided measurementRate.
-This allows the measurementRate to be filtered before the PID update is called.
+Calculate PID output using the provided measurementRate and ITerm error.
+This allows the measurementRate to be filtered and the ITerm error to be attenuated 
+before the PID update is called.
 */
 float PIDF::updateDeltaITerm(float measurement, float measurementDelta, float iTermError, float deltaT) // NOLINT(bugprone-easily-swappable-parameters)
 {
@@ -51,8 +52,8 @@ float PIDF::updateDeltaITerm(float measurement, float measurementDelta, float iT
 
     if (_integralThreshold == 0.0F || fabsf(error) >= _integralThreshold) {
         // "integrate" the error
-        //_errorIntegral += _pid.ki*iTermError*deltaT; // Euler integration
-        _errorIntegral += _pid.ki*0.5F*(iTermError + _errorPrevious)*deltaT; // integration using trapezoid rule
+        _errorIntegral += _pid.ki*iTermError*deltaT; // Euler integration
+        //_errorIntegral += _pid.ki*0.5F*(iTermError + _errorPrevious)*deltaT; // integration using trapezoid rule
         // Anti-windup via integral clamping
         if (_integralMax > 0.0F && _errorIntegral > _integralMax) {
             _errorIntegral = _integralMax;
@@ -110,8 +111,8 @@ float PIDF::updateSPI(float measurement, float deltaT) // NOLINT(bugprone-easily
 
     if (_integralThreshold == 0.0F || fabsf(error) >= _integralThreshold) {
         // "integrate" the error
-        //_errorIntegral += _pid.ki*error*deltaT; // Euler integration
-        _errorIntegral += _pid.ki*0.5F*(error + _errorPrevious)*deltaT; // integration using trapezoid rule
+        _errorIntegral += _pid.ki*error*deltaT; // Euler integration
+        //_errorIntegral += _pid.ki*0.5F*(error + _errorPrevious)*deltaT; // integration using trapezoid rule
         // Anti-windup via integral clamping
         if (_integralMax > 0.0F && _errorIntegral > _integralMax) {
             _errorIntegral = _integralMax;
